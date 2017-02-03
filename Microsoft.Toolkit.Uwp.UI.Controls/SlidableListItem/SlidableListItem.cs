@@ -154,6 +154,19 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
             DependencyProperty.Register("IsPointerReleasedOnSwipingHandled", typeof(bool), typeof(SlidableListItem), new PropertyMetadata(false));
 
         /// <summary>
+        /// Identifues the <see cref="LeftSwipingMode"/> property
+        /// </summary>
+        public static readonly DependencyProperty LeftSwipingModeProperty =
+            DependencyProperty.Register("LeftSwipingMode", typeof(SwipeMode), typeof(SlidableListItem), new PropertyMetadata(SwipeMode.One));
+
+        /// <summary>
+        /// Identifues the <see cref="RightSwipingMode"/> property
+        /// </summary>
+        public static readonly DependencyProperty RightSwipingModeProperty =
+            DependencyProperty.Register("RightSwipingMode", typeof(SwipeMode), typeof(SlidableListItem), new PropertyMetadata(SwipeMode.One));
+
+
+        /// <summary>
         /// Occurs when SwipeStatus has changed
         /// </summary>
         public event TypedEventHandler<SlidableListItem, SwipeStatusChangedEventArgs> SwipeStatusChanged;
@@ -170,9 +183,9 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
         private Grid _commandContainer;
         private CompositeTransform _commandContainerTransform;
         private DoubleAnimation _commandContainerClipTranslateAnimation;
-        private StackPanel _leftCommandPanel;
+        private FrameworkElement _leftCommandPanel;
         private CompositeTransform _leftCommandTransform;
-        private StackPanel _rightCommandPanel;
+        private FrameworkElement _rightCommandPanel;
         private CompositeTransform _rightCommandTransform;
         private DoubleAnimation _contentAnimation;
         private Storyboard _contentStoryboard;
@@ -276,7 +289,7 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
 
             if (_leftCommandPanel == null)
             {
-                _leftCommandPanel = GetTemplateChild(PartLeftCommandPanel) as StackPanel;
+                _leftCommandPanel = GetTemplateChild(PartLeftCommandPanel) as FrameworkElement;
                 if (_leftCommandPanel != null)
                 {
                     _leftCommandTransform = _leftCommandPanel.RenderTransform as CompositeTransform;
@@ -285,7 +298,7 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
 
             if (_rightCommandPanel == null)
             {
-                _rightCommandPanel = GetTemplateChild(PartRightCommandPanel) as StackPanel;
+                _rightCommandPanel = GetTemplateChild(PartRightCommandPanel) as FrameworkElement;
                 if (_rightCommandPanel != null)
                 {
                     _rightCommandTransform = _rightCommandPanel.RenderTransform as CompositeTransform;
@@ -309,21 +322,35 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
                 return;
             }
 
-            var x = _transform.TranslateX;
-            _contentAnimation.From = x;
-            _commandContainerClipTranslateAnimation.From = 0;
-            _commandContainerClipTranslateAnimation.To = -x;
-            _contentStoryboard.Begin();
+            
+            //var x = _transform.TranslateX;
+            //_contentAnimation.From = x;
+            //_commandContainerClipTranslateAnimation.From = 0;
+            //_commandContainerClipTranslateAnimation.To = -x;
+            //_contentStoryboard.Begin();
 
-            if (SwipeStatus == SwipeStatus.SwipingPassedLeftThreshold)
+            if (SwipeStatus == SwipeStatus.SwipingPassedLeftThreshold && LeftSwipingMode != SwipeMode.List)
             {
                 RightCommandRequested?.Invoke(this, new EventArgs());
                 RightCommand?.Execute(RightCommandParameter);
+
+                var x = _transform.TranslateX;
+                _contentAnimation.From = x;
+                _commandContainerClipTranslateAnimation.From = 0;
+                _commandContainerClipTranslateAnimation.To = -x;
+                _contentStoryboard.Begin();
+
             }
-            else if (SwipeStatus == SwipeStatus.SwipingPassedRightThreshold)
+            else if (SwipeStatus == SwipeStatus.SwipingPassedRightThreshold && LeftSwipingMode != SwipeMode.List)
             {
                 LeftCommandRequested?.Invoke(this, new EventArgs());
                 LeftCommand?.Execute(LeftCommandParameter);
+
+                var x = _transform.TranslateX;
+                _contentAnimation.From = x;
+                _commandContainerClipTranslateAnimation.From = 0;
+                _commandContainerClipTranslateAnimation.To = -x;
+                _contentStoryboard.Begin();
             }
 
             Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { SwipeStatus = SwipeStatus.Idle; }).AsTask();
@@ -750,6 +777,26 @@ namespace Microsoft.Toolkit.Uwp.UI.Controls
         {
             get { return (bool)GetValue(IsPointerReleasedOnSwipingHandledProperty); }
             set { SetValue(IsPointerReleasedOnSwipingHandledProperty, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets a value for change the SwipingMode to the left swiping gesture
+        /// Set this to <value>List</value> to turn on the list feature on the Left swiping/>
+        /// </summary>
+        public SwipeMode LeftSwipingMode
+        {
+            get { return (SwipeMode)GetValue(LeftSwipingModeProperty); }
+            set { SetValue(LeftSwipingModeProperty, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets a value for change the SwipingMode to the right swiping gesture
+        /// Set this to <value>List</value> to turn on the list feature on the Left swiping/>
+        /// </summary>
+        public SwipeMode RightSwipingMode
+        {
+            get { return (SwipeMode)GetValue(RightSwipingModeProperty); }
+            set { SetValue(RightSwipingModeProperty, value); }
         }
     }
 }
